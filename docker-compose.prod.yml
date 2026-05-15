@@ -1,0 +1,73 @@
+version: '3.8'
+
+# Production configuration - uses external PostgreSQL cluster
+# For local development, use docker-compose.yml instead
+
+services:
+  db-migrator:
+    build:
+      context: .
+      dockerfile: database/migrations/Dockerfile
+    container_name: ocg-db-migrator
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+    networks:
+      - ocg
+
+  ocg-server:
+    build:
+      context: .
+      dockerfile: ocg-server/Dockerfile
+    container_name: ocg-server
+    environment:
+      # Database (external cluster)
+      OCG_DB__HOST: ${DB_HOST}
+      OCG_DB__PORT: ${DB_PORT}
+      OCG_DB__DBNAME: ${DB_NAME}
+      OCG_DB__USER: ${DB_USER}
+      OCG_DB__PASSWORD: ${DB_PASSWORD}
+      
+      # Server
+      OCG_SERVER__ADDR: 0.0.0.0:9000
+      OCG_SERVER__BASE_URL: ${SERVER_BASE_URL:-https://ocg.example.com}
+      OCG_SERVER__COOKIE__SECURE: "${COOKIE_SECURE:-true}"
+      
+      # Login options
+      OCG_SERVER__LOGIN__EMAIL: "true"
+      OCG_SERVER__LOGIN__GITHUB: "${GITHUB_OAUTH_ENABLED:-false}"
+      
+      # Email
+      OCG_EMAIL__FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
+      OCG_EMAIL__FROM_NAME: ${EMAIL_FROM_NAME:-Open Community Groups}
+      OCG_EMAIL__SMTP__HOST: ${SMTP_HOST}
+      OCG_EMAIL__SMTP__PORT: ${SMTP_PORT:-587}
+      OCG_EMAIL__SMTP__USERNAME: ${SMTP_USERNAME}
+      OCG_EMAIL__SMTP__PASSWORD: ${SMTP_PASSWORD}
+      OCG_EMAIL__RCPTS_WHITELIST: ${EMAIL_WHITELIST:-}
+      
+      # GitHub OAuth (optional)
+      OCG_SERVER__OAUTH2__GITHUB__CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      OCG_SERVER__OAUTH2__GITHUB__CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      OCG_SERVER__OAUTH2__GITHUB__REDIRECT_URI: ${SERVER_BASE_URL:-https://ocg.example.com}/log-in/oauth2/github/callback
+      
+      # Image storage (default: database)
+      OCG_IMAGES__PROVIDER: ${IMAGE_PROVIDER:-db}
+      
+      # Logging
+      OCG_LOG__FORMAT: ${LOG_FORMAT:-json}
+    depends_on:
+      db-migrator:
+        condition: service_completed_successfully
+    ports:
+      - "9000:9000"
+    networks:
+      - ocg
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  ocg:
+    driver: bridge

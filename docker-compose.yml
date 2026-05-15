@@ -1,0 +1,109 @@
+version: '3.8'
+
+# Development configuration - all-in-one local setup
+# Includes: PostgreSQL 18, Mailhog for SMTP, OCG server with email/password login
+# 
+# Usage: docker-compose up -d
+# Web UI: http://localhost:9000
+# Mailhog: http://localhost:1025 (SMTP), http://localhost:8025 (Web UI)
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: ocg-postgres-dev
+    environment:
+      POSTGRES_USER: ocg
+      POSTGRES_PASSWORD: ocg_dev
+      POSTGRES_DB: ocg
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ocg"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ocg
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ocg-mailhog-dev
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - ocg
+
+  db-migrator:
+    build:
+      context: .
+      dockerfile: database/migrations/Dockerfile
+    container_name: ocg-db-migrator-dev
+    environment:
+      DATABASE_URL: postgresql://ocg:ocg_dev@postgres:5432/ocg
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ocg
+
+  ocg-server:
+    build:
+      context: .
+      dockerfile: ocg-server/Dockerfile
+    container_name: ocg-server-dev
+    environment:
+      # Database
+      OCG_DB__HOST: postgres
+      OCG_DB__PORT: 5432
+      OCG_DB__DBNAME: ocg
+      OCG_DB__USER: ocg
+      OCG_DB__PASSWORD: ocg_dev
+      
+      # Server
+      OCG_SERVER__ADDR: 0.0.0.0:9000
+      OCG_SERVER__BASE_URL: http://localhost:9000
+      OCG_SERVER__COOKIE__SECURE: "false"
+      OCG_SERVER__DISABLE_REFERER_CHECKS: "true"
+      
+      # Login options
+      OCG_SERVER__LOGIN__EMAIL: "true"
+      OCG_SERVER__LOGIN__GITHUB: "false"
+      
+      # Email (Mailhog)
+      OCG_EMAIL__FROM_ADDRESS: dev@localhost
+      OCG_EMAIL__FROM_NAME: OCG Development
+      OCG_EMAIL__SMTP__HOST: mailhog
+      OCG_EMAIL__SMTP__PORT: 1025
+      OCG_EMAIL__SMTP__USERNAME: dev
+      OCG_EMAIL__SMTP__PASSWORD: dev
+      
+      # Image storage
+      OCG_IMAGES__PROVIDER: db
+      
+      # Logging
+      OCG_LOG__FORMAT: pretty
+    depends_on:
+      postgres:
+        condition: service_healthy
+      db-migrator:
+        condition: service_completed_successfully
+    ports:
+      - "9000:9000"
+    networks:
+      - ocg
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  ocg:
+    driver: bridge
+
