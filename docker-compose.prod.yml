@@ -53,6 +53,10 @@ services:
       OCG_SERVER__LOGIN__EMAIL: "true"
       OCG_SERVER__LOGIN__GITHUB: "${GITHUB_OAUTH_ENABLED:-false}"
       OCG_SERVER__LOGIN__LINUXFOUNDATION: "${LINUXFOUNDATION_OIDC_ENABLED:-false}"
+
+      # Auth provider maps (required by config parser)
+      OCG_SERVER__OAUTH2: "{}"
+      OCG_SERVER__OIDC: "{}"
       
       # Email
       OCG_EMAIL__FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
@@ -62,11 +66,6 @@ services:
       OCG_EMAIL__SMTP__USERNAME: ${SMTP_USERNAME}
       OCG_EMAIL__SMTP__PASSWORD: ${SMTP_PASSWORD}
       OCG_EMAIL__RCPTS_WHITELIST: ${EMAIL_WHITELIST:-}
-      
-      # GitHub OAuth (optional)
-      OCG_SERVER__OAUTH2__GITHUB__CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      OCG_SERVER__OAUTH2__GITHUB__CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      OCG_SERVER__OAUTH2__GITHUB__REDIRECT_URI: ${SERVER_BASE_URL:-https://ocg.example.com}/log-in/oauth2/github/callback
       
       # Image storage (default: database)
       OCG_IMAGES__PROVIDER: ${IMAGE_PROVIDER:-db}

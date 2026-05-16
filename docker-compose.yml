@@ -86,6 +86,10 @@ services:
       OCG_SERVER__LOGIN__EMAIL: "true"
       OCG_SERVER__LOGIN__GITHUB: "false"
       OCG_SERVER__LOGIN__LINUXFOUNDATION: "false"
+
+      # Auth provider maps (required by config parser)
+      OCG_SERVER__OAUTH2: "{}"
+      OCG_SERVER__OIDC: "{}"
       
       # Email (Mailhog)
       OCG_EMAIL__FROM_ADDRESS: dev@localhost
