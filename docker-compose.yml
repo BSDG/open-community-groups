@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Development configuration - all-in-one local setup
 # Includes: PostgreSQL 18, Mailhog for SMTP, OCG server with email/password login
 # 
