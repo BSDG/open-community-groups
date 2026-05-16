@@ -42,22 +42,8 @@ services:
       dockerfile: database/migrations/Dockerfile
     container_name: ocg-db-migrator-dev
     environment:
-      TERN_CONF: /tmp/tern.conf
-      DATABASE_URL: postgresql://ocg:ocg_dev@postgres:5432/ocg
-    command:
-      - /bin/sh
-      - -ec
-      - |
-        cat > "$TERN_CONF" <<EOF
-        [database]
-        host = postgres
-        port = 5432
-        database = ocg
-        user = ocg
-        password = ocg_dev
-        sslmode = disable
-        EOF
-        ./migrate.sh
+      TERN_CONF: /home/ocg/tern.dev.conf
+    command: ["./migrate.sh"]
     depends_on:
       postgres:
         condition: service_healthy
