@@ -9,7 +9,9 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgis/postgis:18-3.5
+    build:
+      context: .
+      dockerfile: database/postgres-dev/Dockerfile
     container_name: ocg-postgres-dev
     environment:
       POSTGRES_USER: ocg
