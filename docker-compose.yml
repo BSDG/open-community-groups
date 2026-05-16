@@ -85,6 +85,7 @@ services:
       # Login options
       OCG_SERVER__LOGIN__EMAIL: "true"
       OCG_SERVER__LOGIN__GITHUB: "false"
+      OCG_SERVER__LOGIN__LINUXFOUNDATION: "false"
       
       # Email (Mailhog)
       OCG_EMAIL__FROM_ADDRESS: dev@localhost

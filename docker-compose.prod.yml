@@ -52,6 +52,7 @@ services:
       # Login options
       OCG_SERVER__LOGIN__EMAIL: "true"
       OCG_SERVER__LOGIN__GITHUB: "${GITHUB_OAUTH_ENABLED:-false}"
+      OCG_SERVER__LOGIN__LINUXFOUNDATION: "${LINUXFOUNDATION_OIDC_ENABLED:-false}"
       
       # Email
       OCG_EMAIL__FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
