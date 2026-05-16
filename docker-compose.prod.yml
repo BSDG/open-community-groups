@@ -10,7 +10,22 @@ services:
       dockerfile: database/migrations/Dockerfile
     container_name: ocg-db-migrator
     environment:
+      TERN_CONF: /tmp/tern.conf
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        cat > "$TERN_CONF" <<EOF
+        [database]
+        host = ${DB_HOST}
+        port = ${DB_PORT}
+        database = ${DB_NAME}
+        user = ${DB_USER}
+        password = ${DB_PASSWORD}
+        sslmode = prefer
+        EOF
+        ./migrate.sh
     networks:
       - ocg
 
@@ -19,6 +34,8 @@ services:
       context: .
       dockerfile: ocg-server/Dockerfile
     container_name: ocg-server
+    command:
+      - /usr/local/bin/ocg-server
     environment:
       # Database (external cluster)
       OCG_DB__HOST: ${DB_HOST}
@@ -63,7 +80,7 @@ services:
     networks:
       - ocg
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9000/health-check"]
       interval: 30s
       timeout: 10s
       retries: 3
